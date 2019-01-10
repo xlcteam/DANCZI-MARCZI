@@ -1,5 +1,5 @@
 /**
- * Vesion 1.0 of softvare for our soccer robots DANCZI/MARCI.
+ * Vesion 1.1 of softvare for our soccer robots DANCZI/MARCI.
  * Robot can in this version:
  * Move using PID
  * Follow ball
@@ -211,6 +211,54 @@ void vzad(int vstup) {
   motorC.go(speeds[2] + compensation);
   motorD.go(speeds[3] + compensation);
 }
+void vpravo(int vstup) {
+  int16_t speeds[4] = {spd, -spd, -spd, spd};
+  compensation = PID(speeds, 0, vstup);
+  motorA.go(speeds[0] + compensation);
+  motorB.go(speeds[1] + compensation);
+  motorC.go(speeds[2] + compensation);
+  motorD.go(speeds[3] + compensation);
+}
+void vlavo(int vstup) {
+  int16_t speeds[4] = {-spd, spd, spd, -spd};
+  compensation = PID(speeds, 0, vstup);
+  motorA.go(speeds[0] + compensation);
+  motorB.go(speeds[1] + compensation);
+  motorC.go(speeds[2] + compensation);
+  motorD.go(speeds[3] + compensation);
+}
+void vlavo_vpred(int vstup) {
+  int16_t speeds[4] = {-spd, 0, spd, 0};
+  compensation = PID(speeds, 0, vstup);
+  motorA.go(speeds[0] + compensation);
+  motorB.go(speeds[1] + compensation);
+  motorC.go(speeds[2] + compensation);
+  motorD.go(speeds[3] + compensation);
+}
+void vpravo_dole(int vstup) {
+  int16_t speeds[4] = {spd, 0, -spd, 0};
+  compensation = PID(speeds, 0, vstup);
+  motorA.go(speeds[0] + compensation);
+  motorB.go(speeds[1] + compensation);
+  motorC.go(speeds[2] + compensation);
+  motorD.go(speeds[3] + compensation);
+}
+void vlavo_vzad(int vstup) {
+  int16_t speeds[4] = {0, -spd, 0, spd};
+  compensation = PID(speeds, 0, vstup);
+  motorA.go(speeds[0] + compensation);
+  motorB.go(speeds[1] + compensation);
+  motorC.go(speeds[2] + compensation);
+  motorD.go(speeds[3] + compensation);
+}
+void vpravo_vpred(int vstup) {
+  int16_t speeds[4] = {0, spd, 0, -spd};
+  compensation = PID(speeds, 0, vstup);
+  motorA.go(speeds[0] + compensation);
+  motorB.go(speeds[1] + compensation);
+  motorC.go(speeds[2] + compensation);
+  motorD.go(speeds[3] + compensation);
+}
 int angle_ball() {
   pixyViSy.update();
   ball_angle = pixyViSy.getBallAngle();
@@ -269,16 +317,14 @@ void loop()
       motorA.go(75);
       motorB.go(75);
       motorC.go(75);       //no object
-      motorD.go(75);
+      motorD.go(75);     
     }
     else {
       folov_compass = compass();
-      vpred(angle_ball());
+      vpred(angle_ball());   
     }
   }
   else {
-
     vzad(compass() - folov_compass);
-
-  }
+    }
 }

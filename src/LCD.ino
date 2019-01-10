@@ -126,7 +126,7 @@ lcd.println(digitalRead(LINE_RIGHT_PIN_2));
 void mo(){
   int mode_motor;
       lcd.clear();
-    while(digitalRead(44))
+
     while(!digitalRead(44)){
       lcd.setCursor(0,0);lcd.print("A B C D BACK");
 
@@ -193,27 +193,30 @@ int dlska= text.length();
    while(menu){
 
     if(slide==1){
-  if(digitalRead(30)){slide=2;while(digitalRead(30));}//compass co();last_buton=millis();
-  else if(digitalRead(28)){co();last_buton=millis();}//kicker//compas
-  else if(digitalRead(26)){st();last_buton=millis();}//start
-  else if(digitalRead(24)){ca();last_buton=millis();}//camera
-  else if(digitalRead(44)&&millis()-last_buton>500){mo();last_buton=millis();}//motors
-else{ lcd.setCursor(0,0);lcd.print("1/3 CO STA CA MO");
+  if(digitalRead(28)){co();}//compas
+  else if(digitalRead(26)){st();}//start
+  else if(digitalRead(24)){ca();}//camera
+else{ lcd.setCursor(0,0);lcd.print("1/4 CO STA CA BA");
   lcd.setCursor(5,1);lcd.write("DANCZI");}
     }
      else if(slide==2){
-  if(digitalRead(30)){slide=3;while(digitalRead(30));}//compass co();last_buton=millis();
-  else if(digitalRead(28)){li();last_buton=millis();}//lights
-  else if(digitalRead(26)){st();last_buton=millis();}//start
-  else if(digitalRead(24)){ki();last_buton=millis();}//compas//kicker
-  else if(digitalRead(44)&&millis()-last_buton>500){mo();last_buton=millis();}//dribler
-else{ lcd.setCursor(0,0);lcd.print("2/3 LI STA KI DR");
+ 
+  if(digitalRead(28)){li();}//lights
+  else if(digitalRead(26)){st();}//start
+  else if(digitalRead(24)){ki();}//kicker
+else{ lcd.setCursor(0,0);lcd.print("2/4 LI STA KI BA");
   lcd.setCursor(5,1);lcd.write("DANCZI");}
     }
    else if(slide==3){
 
-  if(digitalRead(30)){slide=1;lcd.clear();while(digitalRead(30));}//compass co();last_buton=millis();
-else{ lcd.setCursor(0,0);lcd.print("3/3 XLC_TEAMinfo");
+  if(digitalRead(28)){mo();}//motors
+  else if(digitalRead(26)){st();}//start
+  else if(digitalRead(24)){}//dribler
+else{ lcd.setCursor(0,0);lcd.print("3/4 MO STA DR BA");
+  lcd.setCursor(5,1);lcd.write("DANCZI");}
+    }
+   else if(slide==4){
+ lcd.setCursor(0,0);lcd.print("4/4 XLC_TEAMinfo");
 
       for(int x=0;(!digitalRead(30))&&x<dlska-15;x++){
 
@@ -225,11 +228,18 @@ else{ lcd.setCursor(0,0);lcd.print("3/3 XLC_TEAMinfo");
 
       delay(700);
       x=x-16;
-    }
+    
 
   }
     }
-
+  if(digitalRead(30)){
+    slide++;
+    if(slide==5){
+      slide=1;
+      }
+     delay(700);
+     lcd.clear();
+    }
       }
 
 
