@@ -237,7 +237,7 @@ else{ lcd.setCursor(0,0);lcd.print("3/4 MO STA DR BA");
     if(slide==5){
       slide=1;
       }
-     delay(700);
+     delay(400);
      lcd.clear();
     }
       }

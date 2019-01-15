@@ -1,5 +1,5 @@
 /**
- * Vesion 1.1 of softvare for our soccer robots DANCZI/MARCI.
+ * Vesion 1.2 of softvare for our soccer robots DANCZI/MARCI.
  * Robot can in this version:
  * Move using PID
  * Follow ball
@@ -41,7 +41,7 @@
 #define LINE_RIGHT_PIN_2 A9
 
 #define LINE_THRESH_PIN 12
-#define LINE_TIME 280
+#define LINE_TIME 100
 #define STOP_LINE_TIME 20
 #define MUTEX(state) mutex[0] = mutex[1] = mutex[2] = state
 #define LINE_MAX_DIFF_TIME 20000
@@ -51,13 +51,17 @@ int folov_compass = 0;
 uint8_t line_use_int = LINE_USE_INT;
 uint8_t light_pwm = LINE_THRESH;
 uint8_t motion_last_dir;
+uint8_t spd_line=100;
+
 uint32_t volatile ws_tmp[] = {0, 0, 0 , 0, 0, 0};
 uint32_t ws[] = {0, 0, 0 , 0, 0, 0};
 uint8_t mutex[] = {0, 0, 0 , 0, 0, 0};
 uint8_t touch_line;
+uint8_t last_motor_dir;
 long start;
+int out_line_time=500;
 int touch_line_dir;
-int move_mode = 1; //1=ball foloving,2=gool kicking
+int moving_tipe=1;//1=ball foloving,2=gool kicking       
 ISR(PCINT2_vect)
 {
   if (!mutex[0] && !ws_tmp[0] && read_line_sensor(0)) {
@@ -196,6 +200,7 @@ void na_mieste(int vstup) {
   motorD.go(speeds[3] + compensation);
 }
 void vpred(int vstup) {
+  last_motor_dir=0;
   int16_t speeds[4] = { -spd, -spd, spd, spd};
   compensation = PID(speeds, 0, vstup);
   motorA.go(speeds[0] + compensation);
@@ -204,6 +209,7 @@ void vpred(int vstup) {
   motorD.go(speeds[3] + compensation);
 }
 void vzad(int vstup) {
+  last_motor_dir=4;
   int16_t speeds[4] = {spd, spd, -spd, -spd};
   compensation = PID(speeds, 0, vstup);
   motorA.go(speeds[0] + compensation);
@@ -212,6 +218,7 @@ void vzad(int vstup) {
   motorD.go(speeds[3] + compensation);
 }
 void vpravo(int vstup) {
+  last_motor_dir=2;
   int16_t speeds[4] = {spd, -spd, -spd, spd};
   compensation = PID(speeds, 0, vstup);
   motorA.go(speeds[0] + compensation);
@@ -220,6 +227,7 @@ void vpravo(int vstup) {
   motorD.go(speeds[3] + compensation);
 }
 void vlavo(int vstup) {
+  last_motor_dir=6;
   int16_t speeds[4] = {-spd, spd, spd, -spd};
   compensation = PID(speeds, 0, vstup);
   motorA.go(speeds[0] + compensation);
@@ -228,6 +236,7 @@ void vlavo(int vstup) {
   motorD.go(speeds[3] + compensation);
 }
 void vlavo_vpred(int vstup) {
+  last_motor_dir=7;
   int16_t speeds[4] = {-spd, 0, spd, 0};
   compensation = PID(speeds, 0, vstup);
   motorA.go(speeds[0] + compensation);
@@ -236,6 +245,7 @@ void vlavo_vpred(int vstup) {
   motorD.go(speeds[3] + compensation);
 }
 void vpravo_dole(int vstup) {
+  last_motor_dir=3;
   int16_t speeds[4] = {spd, 0, -spd, 0};
   compensation = PID(speeds, 0, vstup);
   motorA.go(speeds[0] + compensation);
@@ -244,6 +254,7 @@ void vpravo_dole(int vstup) {
   motorD.go(speeds[3] + compensation);
 }
 void vlavo_vzad(int vstup) {
+  last_motor_dir=5;
   int16_t speeds[4] = {0, -spd, 0, spd};
   compensation = PID(speeds, 0, vstup);
   motorA.go(speeds[0] + compensation);
@@ -252,6 +263,7 @@ void vlavo_vzad(int vstup) {
   motorD.go(speeds[3] + compensation);
 }
 void vpravo_vpred(int vstup) {
+  last_motor_dir=1;
   int16_t speeds[4] = {0, spd, 0, -spd};
   compensation = PID(speeds, 0, vstup);
   motorA.go(speeds[0] + compensation);
@@ -259,6 +271,25 @@ void vpravo_vpred(int vstup) {
   motorC.go(speeds[2] + compensation);
   motorD.go(speeds[3] + compensation);
 }
+void motors_off(){
+  motorA.go(0);
+  motorB.go(0);
+  motorC.go(0);
+  motorD.go(0);
+  }
+void out_line(int vstup){
+  last_motor_dir=4;
+  long long x=millis();
+  while(millis()-x<400){
+  int16_t speeds[4] = {spd_line, spd_line, -spd_line, -spd_line};
+  motorA.go(speeds[0]);
+  motorB.go(speeds[1]);
+  motorC.go(speeds[2]);
+  motorD.go(speeds[3]);
+   }
+  motors_off();
+  delay(LINE_TIME);
+  }
 int angle_ball() {
   pixyViSy.update();
   ball_angle = pixyViSy.getBallAngle();
@@ -313,18 +344,30 @@ void setup()
 void loop()
 {
   if (line_sensors_dir() == 255) {
+
     if (distance_ball() == 0) {
+
       motorA.go(75);
       motorB.go(75);
       motorC.go(75);       //no object
-      motorD.go(75);     
+      motorD.go(75);
     }
     else {
       folov_compass = compass();
-      vpred(angle_ball());   
+      vpred(angle_ball());
+      moving_tipe==1;
     }
+
   }
   else {
-    vzad(compass() - folov_compass);
-    }
+    if(line_sensors_dir()!=255){
+      if(moving_tipe==1){
+        out_line(compass()-folov_compass);
+      }
+      else{
+        //moving_tipe==2
+        }
+
+}
+  }
 }
