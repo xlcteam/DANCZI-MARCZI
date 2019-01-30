@@ -1,9 +1,10 @@
 /**
- * Vesion 1.2 of softvare for our soccer robots DANCZI/MARCI.
+ * Vesion 1.3 of softvare for our soccer robots DANCZI/MARCI.
  * Robot can in this version:
  * Move using PID
  * Follow ball
  * Detect a line
+ * Move dribler
  * Made by XLC team
  */
 #include <Wire.h>
@@ -31,6 +32,7 @@
 #define C_PWM 4
 #define D_DIR 2
 #define D_PWM 3
+#define DRIBLER_PWM 6
 //light sensors pins
 #define LINE_SENSORS_COUNT 6
 #define LINE_FRONT_PIN A13
@@ -41,8 +43,8 @@
 #define LINE_RIGHT_PIN_2 A9
 
 #define LINE_THRESH_PIN 12
-#define LINE_TIME 100
-#define STOP_LINE_TIME 20
+#define LINE_TIME 200
+#define STOP_LINE_TIME 40
 #define MUTEX(state) mutex[0] = mutex[1] = mutex[2] = state
 #define LINE_MAX_DIFF_TIME 20000
 #define LINE_USE_INT 1
@@ -61,7 +63,7 @@ uint8_t last_motor_dir;
 long start;
 int out_line_time=500;
 int touch_line_dir;
-int moving_tipe=1;//1=ball foloving,2=gool kicking       
+int moving_tipe=2;//1=ball foloving,2=gool kicking       
 ISR(PCINT2_vect)
 {
   if (!mutex[0] && !ws_tmp[0] && read_line_sensor(0)) {
@@ -80,7 +82,7 @@ ISR(PCINT2_vect)
     ws_tmp[3] = micros();
   }
 
-  if (!mutex[5] && !ws_tmp[5] && read_line_sensor(4)) {
+  if (!mutex[4] && !ws_tmp[4] && read_line_sensor(4)) {
     ws_tmp[4] = micros();
   }
 
@@ -110,9 +112,9 @@ int PID_P = 0;
 long PID_I = 0;
 int PID_D = 0;
 //////////////////////////////////////////////////////
-int P = 3;
-float I = 0.008;
-int D = 13;
+#define P  3
+#define I  0.008
+#define D  13
 //////////////////////////////////////////////////////
 #define max_I 100
 #define min_I -100
@@ -127,8 +129,10 @@ int error;
 int frequency = 20;
 long last_time = 0;
 int last_error = 0;
+int line_dir;
 int compensation;
-long now = 0;
+long long now = 0;
+long long while_time;
 int error_index = -1;
 int errors[2] {0, 0};//delay for D parameter of PID
 int PID(int16_t speeds[3], int setpoint, int feedback) {
@@ -244,7 +248,7 @@ void vlavo_vpred(int vstup) {
   motorC.go(speeds[2] + compensation);
   motorD.go(speeds[3] + compensation);
 }
-void vpravo_dole(int vstup) {
+void vpravo_vzad(int vstup) {
   last_motor_dir=3;
   int16_t speeds[4] = {spd, 0, -spd, 0};
   compensation = PID(speeds, 0, vstup);
@@ -286,9 +290,9 @@ void out_line(int vstup){
   motorB.go(speeds[1]);
   motorC.go(speeds[2]);
   motorD.go(speeds[3]);
-   }
+   } 
   motors_off();
-  delay(LINE_TIME);
+  delay(STOP_LINE_TIME);
   }
 int angle_ball() {
   pixyViSy.update();
@@ -327,12 +331,51 @@ int distance_ball() {
   }
   return ball_distance;
 }
-
+void goal(){
+   spd = 100;
+    pixyViSy.update();
+    action = pixyViSy.getGoalAction();
+            switch (action) {
+            case 'K': {
+                na_mieste(compass());
+                 Serial.println("na mieste");
+                break;
+            }
+            case 'L': {
+                 vlavo(compass());
+                  Serial.println("vlavo");
+                break;
+            }
+            case 'R': {
+                vpravo(compass());
+                Serial.println("vpravo");
+                break;
+            }
+            default: {
+                Serial.println("ERROR!");
+                break;
+            }
+        }
+  }
+void ball(){
+   if (distance_ball() == ~0) {
+      motorA.go(75);
+      motorB.go(75);
+      motorC.go(75);       //no object
+      motorD.go(75);     
+    }
+    else {
+      folov_compass = compass();
+      vpred(angle_ball());
+      moving_tipe=1;   
+    }
+  }
 void setup()
 {
   Serial.begin(9600);
   Wire.begin();
   interrupts();
+  pinMode(DRIBLER_PWM,OUTPUT);
   setup_line_sensors();
   pixyViSy.setGoalSig(GOAL_SIG);
   pixyViSy.setBallSig(BALL_SIG);
@@ -343,31 +386,88 @@ void setup()
 
 void loop()
 {
-  if (line_sensors_dir() == 255) {
-
-    if (distance_ball() == 0) {
-
-      motorA.go(75);
-      motorB.go(75);
-      motorC.go(75);       //no object
-      motorD.go(75);
-    }
-    else {
-      folov_compass = compass();
-      vpred(angle_ball());
-      moving_tipe==1;
-    }
-
+ 
+ line_dir=line_sensors_dir();
+  if (line_dir == 255) {
+//main program
   }
   else {
-    if(line_sensors_dir()!=255){
+    if(line_dir!=255){
       if(moving_tipe==1){
-        out_line(compass()-folov_compass);
+        out_line(compass()-folov_compass);  
       }
       else{
         //moving_tipe==2
-        }
-
-}
+        switch(line_dir){
+          case 0:
+              while_time=millis();
+              while(millis()-while_time<LINE_TIME){
+              vzad(compass());
+               } 
+              motors_off();
+              delay(STOP_LINE_TIME);
+         break;
+         case 1:
+              while_time=millis();
+              while(millis()-while_time<LINE_TIME){
+              vlavo_vzad(compass());
+               } 
+              motors_off();
+              delay(STOP_LINE_TIME);
+         break;
+         case 2:
+              while_time=millis();
+              while(millis()-while_time<LINE_TIME){
+              vlavo(compass());
+               } 
+              motors_off();
+              delay(STOP_LINE_TIME);
+         break;
+         case 3:
+              while_time=millis();
+              while(millis()-while_time<LINE_TIME){
+              vlavo_vpred(compass());
+               } 
+              motors_off();
+              delay(STOP_LINE_TIME);
+         break;
+         case 4:
+              while_time=millis();
+              while(millis()-while_time<LINE_TIME){
+              vpred(compass());
+               } 
+              motors_off();
+              delay(STOP_LINE_TIME);
+         break;
+         case 5:
+              while_time=millis();
+              while(millis()-while_time<LINE_TIME){
+              vpravo_vpred(compass());
+               } 
+              motors_off();
+              delay(STOP_LINE_TIME);
+         break;
+         case 6:
+              while_time=millis();
+              while(millis()-while_time<LINE_TIME){
+              vpravo(compass());
+               } 
+              motors_off();
+              delay(STOP_LINE_TIME);
+         break;
+         case 7:
+              while_time=millis();
+              while(millis()-while_time<LINE_TIME){
+              vpravo_vzad(compass());
+               } 
+              motors_off();
+              delay(STOP_LINE_TIME);
+         break;
+         case 255:
+          Serial.println("error");
+         break;   
+          }
+        }                                                             
+    }
   }
 }

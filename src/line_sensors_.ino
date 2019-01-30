@@ -124,7 +124,6 @@ uint8_t process_ws()
 
   }
 
-
   MUTEX(0);
 
   line_last_dir = dir;

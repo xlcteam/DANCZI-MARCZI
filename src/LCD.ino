@@ -184,6 +184,42 @@ void mo(){
 
 
   }lcd.clear();}
+  void dr(){
+    int x=100;
+    lcd.clear();
+    while(!digitalRead(44)){
+    lcd.setCursor(0,0);lcd.print("- ON + OFF BACK");
+    lcd.setCursor(0,1);lcd.print("speed:");
+    lcd.print(x);
+    if(digitalRead(26)){
+      if(x<255){
+        x++;
+        }
+        else{
+          x=255;
+          }
+          delay(50);
+      lcd.clear();
+      }
+    else if(digitalRead(30)){
+      if(x!=0){
+        x--;
+        }
+        else{
+          x=0;
+          }
+        delay(50);
+      lcd.clear();
+      }
+    else if(digitalRead(28)){
+      analogWrite(DRIBLER_PWM, x);
+      }
+    else if(digitalRead(24)){
+      analogWrite(DRIBLER_PWM, 0);
+      }
+    }
+    lcd.clear();
+    }
 void start_menu(){
   static long last_buton = 0;
   int x=0;
@@ -211,7 +247,7 @@ else{ lcd.setCursor(0,0);lcd.print("2/4 LI STA KI BA");
 
   if(digitalRead(28)){mo();}//motors
   else if(digitalRead(26)){st();}//start
-  else if(digitalRead(24)){}//dribler
+  else if(digitalRead(24)){dr();}//dribler
 else{ lcd.setCursor(0,0);lcd.print("3/4 MO STA DR BA");
   lcd.setCursor(5,1);lcd.write("DANCZI");}
     }
