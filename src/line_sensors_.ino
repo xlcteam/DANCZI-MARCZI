@@ -123,6 +123,14 @@ uint8_t process_ws()
     }
 
   }
+/*if(dir == last_motor_dir){
+  
+  }
+else{
+    if(last_motor_dir==1||last_motor_dir==3||last_motor_dir==5||last_motor_dir==7){
+      dir=last_motor_dir;
+      }
+  }*/
 
   MUTEX(0);
 

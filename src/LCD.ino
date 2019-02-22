@@ -191,6 +191,10 @@ void mo(){
     lcd.setCursor(0,0);lcd.print("- ON + OFF BACK");
     lcd.setCursor(0,1);lcd.print("speed:");
     lcd.print(x);
+    lcd.setCursor(10,1);
+    lcd.print("ball:");
+    lcd.setCursor(15,1);
+    lcd.print(!digitalRead(29));
     if(digitalRead(26)){
       if(x<255){
         x++;
