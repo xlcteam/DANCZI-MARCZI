@@ -55,7 +55,12 @@ void ki(){
       lcd.print("kicker_strong=");
       lcd.print(x);
       delay(100);
-
+      }
+    else if(digitalRead(24)){
+        digitalWrite(31,HIGH);
+        delay(kicker_strong);
+        digitalWrite(31,LOW);
+        delay(2000);
       }
     }
     lcd.clear();
